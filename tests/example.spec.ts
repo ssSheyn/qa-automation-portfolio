@@ -1,18 +1,27 @@
 import { test, expect } from '@playwright/test';
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+test.describe('SauceDemo - Login', () => {
+  test('успешный логин с валидными данными', async ({ page }) => {
+    await page.goto('https://www.saucedemo.com');
 
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Playwright/);
-});
+    await page.fill('#user-name', 'standard_user');
+    await page.fill('#password', 'secret_sauce');
+    await page.click('#login-button');
 
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+    // после успешного логина должны попасть на страницу товаров
+    await expect(page).toHaveURL(/inventory.html/);
+    await expect(page.locator('.title')).toHaveText('Products');
+  });
 
-  // Click the get started link.
-  await page.getByRole('link', { name: 'Get started' }).click();
+  test('неуспешный логин с неверным паролем', async ({ page }) => {
+    await page.goto('https://www.saucedemo.com');
 
-  // Expects page to have a heading with the name of Installation.
-  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+    await page.fill('#user-name', 'standard_user');
+    await page.fill('#password', 'wrong_password');
+    await page.click('#login-button');
+
+    // должно появиться сообщение об ошибке
+    await expect(page.locator('[data-test="error"]')).toBeVisible();
+    await expect(page.locator('[data-test="error"]')).toContainText('Username and password do not match');
+  });
 });
